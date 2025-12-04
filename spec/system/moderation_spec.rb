@@ -58,6 +58,7 @@ describe "Moderation" do
       :budget_investment,
       :comment,
       :debate,
+      :legislation_proposal,
       :proposal,
       :proposal_notification
     ]
@@ -147,7 +148,7 @@ describe "Moderation" do
       describe "moderate in bulk" do
         describe "When a resource has been selected for moderation" do
           let(:hide_button_text) do
-            if factory == :proposal_notification
+            if factory == :proposal_notification || factory == :legislation_proposal
               "proposals"
             else
               factory.to_s.pluralize.tr("_", " ")
@@ -294,7 +295,7 @@ describe "Moderation" do
         expect(page).to have_content content_for(ignored_resource)
       end
 
-      context "Budget Investments, Comments, Debates and Proposals" do
+      context "Budget Investments, Comments, Debates, Legislation Proposals and Proposals" do
         let(:factory) { (factories - [:proposal_notification]).sample }
 
         scenario "Sorting resources" do
