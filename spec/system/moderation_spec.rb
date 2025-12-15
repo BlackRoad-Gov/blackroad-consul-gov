@@ -65,18 +65,6 @@ describe "Moderation" do
     let(:factory) { factories.sample }
     let!(:resource) { create(factory) }
     let(:moderator) { create(:moderator) }
-    let(:index_path) do
-      case factory
-      when :budget_investment
-        polymorphic_path([resource.budget, :investments])
-      when :comment
-        polymorphic_path(resource.commentable)
-      when :proposal_notification
-        polymorphic_path(resource.proposal)
-      else
-        polymorphic_path(factory.to_s.pluralize)
-      end
-    end
     let(:resource_path) do
       if factory == :proposal_notification
         polymorphic_path(resource.proposal)
@@ -89,7 +77,7 @@ describe "Moderation" do
     let(:resource_checkbox_selector) { factory == :comment ? "#{dom_id(resource)}_check" : resource.title }
     let(:order) { factory == :comment ? "newest" : "created_at" }
 
-    scenario "Hide" do
+    scenario "Hide", :show_exceptions do
       login_as moderator.user
       visit resource_path
 
@@ -105,17 +93,15 @@ describe "Moderation" do
       end
       expect(page).to have_content resource_content
 
-      login_as user
-      visit index_path
+      refresh
 
-      if factory == :comment
-        expect(page).to have_css(".comment", count: 1)
-      elsif factory == :proposal_notification
+      expect(page).not_to have_content resource_content
+
+      if factory == :proposal_notification
         expect(page).to have_content "Notifications (0)"
       else
-        expect(page).to have_css(".#{factory}", count: 0)
+        expect(page).to have_content "Not found"
       end
-      expect(page).not_to have_content resource_content
     end
 
     scenario "Can not hide own resource" do
@@ -140,11 +126,7 @@ describe "Moderation" do
         click_button "Block author"
       end
 
-      if factory == :proposal_notification
-        expect(page).to have_current_path proposals_path
-      else
-        expect(page).to have_current_path index_path
-      end
+      expect(page).to have_content "The user has been blocked"
       expect(page).not_to have_content resource_content
     end
 
